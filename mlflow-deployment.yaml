@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow-serving
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mlflow-serving
+  template:
+    metadata:
+      labels:
+        app: mlflow-serving
+    spec:
+      containers:
+      - name: mlflow-container 
+        image: your-dockerhub-user/mlflow-serving:latest  # Replace with your Docker image :TODO
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow-service
+spec:
+  selector:
+    app: mlflow-serving
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer

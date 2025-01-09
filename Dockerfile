@@ -2,7 +2,7 @@
 FROM continuumio/miniconda3
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /
 
 # Copy the environment.yml file into the container
 COPY environment.yml .
@@ -14,8 +14,8 @@ RUN conda env create -f environment.yml
 RUN echo "conda activate mlops" >> ~/.bashrc
 ENV PATH /opt/conda/envs/mlops/bin:$PATH
 
-# Set PYTHONPATH to include the /app directory
-ENV PYTHONPATH /app
+# Set PYTHONPATH to include the / directory
+ENV PYTHONPATH /
 
 # Copy the application code into the container
 COPY . .
@@ -24,4 +24,4 @@ COPY . .
 EXPOSE 5000
 
 # Run the API (or entry point)
-CMD ["python", "app/train.py"]
+CMD ["python", "app/mlflow_train.py"]

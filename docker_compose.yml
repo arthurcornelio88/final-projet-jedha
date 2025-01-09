@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  mlops-app:
+    build:
+      context: .  # Build the Dockerfile in the current directory
+    ports:
+      - "5000:5000"  # Expose the app on localhost:5000
+    depends_on:
+      - mlflow  # Ensure MLflow is up before running this service
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLflow
+    command: ["python", "app/mlflow_train.py"]
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    ports:
+      - "5001:5000"  # Expose MLflow UI on localhost:5001
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    volumes:
+      - ./models:/models
+      - ./mlflow.db:/mlflow.db
+
+  jenkins:
+    image: jenkins/jenkins:lts-jdk11
+    ports:
+      - "8080:8080"  # Jenkins Web UI
+      - "50000:50000"  # Jenkins slave agents
+    volumes:
+      - jenkins-data:/var/jenkins_home  # Persist Jenkins data locally
+    environment:
+      - JENKINS_OPTS=--prefix=/jenkins
+
+volumes:
+  mlflow-data:
+  jenkins-data:

@@ -1,0 +1,12 @@
+# Git-related files
+.gitignore
+
+# Notebook
+airbnb-pricing.ipynb
+
+#Pycache
+test/__pycache__/*
+app/__pycache__/*
+
+# Data
+data/rio_de_janeiro.dbf

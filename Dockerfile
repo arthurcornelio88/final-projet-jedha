@@ -2,21 +2,24 @@
 FROM continuumio/miniconda3
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /
 
-# Create a new conda environment and activate it
-RUN conda create --name myenv python=3.9 -y
-SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
-
-# Install dependencies using conda or pip
+# Create a new conda environment
 COPY environment.yml .
-RUN conda env update --file environment.yml --name myenv && conda clean --all --yes
+RUN conda env create --file environment.yml && conda clean --all --yes
+
+# Activate the environment by default
+SHELL ["conda", "run", "-n", "mlops", "/bin/bash", "-c"]
 
 # Copy the application code
 COPY . .
+
+# Ensure the environment variables are set properly
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/
 
 # Expose the port for the API
 EXPOSE 5000
 
 # Command to run the MLflow model serving
-CMD ["conda", "run", "-n", "myenv", "mlflow", "models", "serve", "-m", "/app/model", "-p", "5000"]
+CMD ["conda", "run", "-n", "mlops", "python", "./app/mlflow_train.py"]

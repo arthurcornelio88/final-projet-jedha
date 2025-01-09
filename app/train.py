@@ -1,16 +1,14 @@
 from app.pipeline import process_and_pipeline
 from app.data_preprocessing import load_data
-from app.model import create_model, custom_loss_function, rsme_function, mae_function
+from app.model import create_model
 from datetime import datetime
-import numpy as np
-import pandas as pd
 
 def train_model(data_file, model_folder):
 
     df_raw = load_data(data_file)
     print("Data loaded.")
 
-    X_train, y_train, X_test, y_test, pipeline = process_and_pipeline(df_raw)
+    X_train, y_train, X_test, y_test, pipeline = process_and_pipeline(df_raw, strat=True)
     print("Data processed.")
 
     # Create and train the model

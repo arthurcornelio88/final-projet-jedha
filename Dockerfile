@@ -1,22 +1,27 @@
-# Use Miniconda as the base image
+# Base image using Miniconda
 FROM continuumio/miniconda3
 
-# Set the working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Create a new conda environment and activate it
-RUN conda create --name myenv python=3.9 -y
-SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
-
-# Install dependencies using conda or pip
+# Copy the environment.yml file into the container
 COPY environment.yml .
-RUN conda env update --file environment.yml --name myenv && conda clean --all --yes
 
-# Copy the application code
+# Install the conda environment
+RUN conda env create -f environment.yml
+
+# Activate the environment by default
+RUN echo "conda activate mlops" >> ~/.bashrc
+ENV PATH /opt/conda/envs/mlops/bin:$PATH
+
+# Set PYTHONPATH to include the /app directory
+ENV PYTHONPATH /app
+
+# Copy the application code into the container
 COPY . .
 
-# Expose the port for the API
+# Expose the port for the API (change if necessary)
 EXPOSE 5000
 
-# Command to run the MLflow model serving
-CMD ["conda", "run", "-n", "myenv", "mlflow", "models", "serve", "-m", "/app/model", "-p", "5000"]
+# Run the API (or entry point)
+CMD ["python", "app/train.py"]

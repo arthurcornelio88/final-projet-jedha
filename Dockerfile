@@ -14,6 +14,9 @@ RUN conda env create -f environment.yml
 RUN echo "conda activate mlops" >> ~/.bashrc
 ENV PATH /opt/conda/envs/mlops/bin:$PATH
 
+# Set PYTHONPATH to include the /app directory
+ENV PYTHONPATH /app
+
 # Copy the application code into the container
 COPY . .
 

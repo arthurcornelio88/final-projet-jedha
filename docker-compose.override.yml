@@ -7,8 +7,7 @@ services:
     ports:
       - "5000:5000"  # Expose the app on localhost:5000
     volumes:
-    - .:/app  # Mount the project directory to /app in the container
-    - ./data:/data  # Mount the data directory if needed
+    - .:/home  # Mount the project directory to /app in the container
     depends_on:
       - mlflow
     environment:

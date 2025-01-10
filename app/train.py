@@ -10,7 +10,7 @@ def train_model(data_file, model_folder):
     df_raw = load_data(data_file)
     print("Data loaded.")
 
-    X_train, y_train, X_test, y_test, pipeline = process_and_pipeline(df_raw)
+    X_train, y_train, X_test, y_test, pipeline = process_and_pipeline(df_raw, strat=True)
     print("Data processed.")
 
     # Create and train the model

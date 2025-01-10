@@ -1,4 +1,5 @@
 from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -16,7 +17,7 @@ from app.static_values import RESPONSE_TIME_ORDER, CANCELLATION_POLICY_ORDER
 import numpy as np
 import pandas as pd
 
-def process_and_pipeline(df_raw, test_size=0.2, random_state=42):
+def process_and_pipeline(df_raw, mlflow=None, strat=None):
     """
     Process raw data and execute the pipeline.
 
@@ -42,18 +43,17 @@ def process_and_pipeline(df_raw, test_size=0.2, random_state=42):
     # Drop rows with NaN in 'price_cat'
     df_cleaned = df_raw.dropna(subset=['price_cat']).reset_index(drop=True)
 
-    '''
-    # Stratify split
-    split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-    for train_index, test_index in split.split(df_cleaned, df_cleaned["price_cat"]):
-        strat_train_set = df_cleaned.loc[train_index]
-        strat_test_set = df_cleaned.loc[test_index]
-    '''
-
-    # Option 2 for spliting the dataset, without stratification
-    strat_train_set, strat_test_set = train_test_split(
-        df_cleaned, test_size=0.2, random_state=42
-    )
+    if strat:
+        # Stratify split
+        split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+        for train_index, test_index in split.split(df_cleaned, df_cleaned["price_cat"]):
+            strat_train_set = df_cleaned.loc[train_index]
+            strat_test_set = df_cleaned.loc[test_index]
+    else:
+        # Option 2 for spliting the dataset, without stratification
+        strat_train_set, strat_test_set = train_test_split(
+            df_cleaned, test_size=0.2, random_state=42
+        )
     
     # droping "price_cat" to make dataset returns to its original state
     for set_ in (strat_train_set, strat_test_set):
@@ -88,11 +88,19 @@ def process_and_pipeline(df_raw, test_size=0.2, random_state=42):
             ]), nominal_columns)
         ])
 
-    pipeline = Pipeline([
-        ('num_outlier', FunctionTransformer(num_outlier)),
-        ('nominal_outlier', FunctionTransformer(nom_outlier)),
-        ('preprocessor', preprocessor)
-    ])
+    if mlflow:
+        pipeline = Pipeline([
+            ('num_outlier', FunctionTransformer(num_outlier)),
+            ('nominal_outlier', FunctionTransformer(nom_outlier)),
+            ('preprocessor', preprocessor),
+            ('decision_tree', DecisionTreeRegressor())
+        ])
+    else:
+        pipeline = Pipeline([
+            ('num_outlier', FunctionTransformer(num_outlier)),
+            ('nominal_outlier', FunctionTransformer(nom_outlier)),
+            ('preprocessor', preprocessor)
+        ])
 
     print(f"Pipeline created!") 
 

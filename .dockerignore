@@ -10,3 +10,6 @@ app/__pycache__/*
 
 # Data
 data/rio_de_janeiro.dbf
+
+# Old
+old/*

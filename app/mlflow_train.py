@@ -1,10 +1,11 @@
 from app.pipeline import process_and_pipeline
-from app.data_preprocessing import load_data
+from app.data_preprocessing import load_data, load_and_sample_data
 from app.model import Model
 from sklearn.model_selection import GridSearchCV
 import mlflow
 import time
 import pandas as pd
+import numpy as np
 
 def train_model(X_train_processed, y_train, param_grid, cv=2, n_jobs=-1, verbose=3):
     """
@@ -21,7 +22,6 @@ def train_model(X_train_processed, y_train, param_grid, cv=2, n_jobs=-1, verbose
     """
 
     tree_model = Model()
-    print(tree_model.get_params().keys())
     gs_cv_model = GridSearchCV(tree_model, param_grid, n_jobs=n_jobs, verbose=verbose, cv=cv, scoring="r2")
     gs_cv_model_fitted = gs_cv_model.fit(X_train_processed, y_train)
     return gs_cv_model_fitted
@@ -66,8 +66,15 @@ def run_experiment(experiment_name, data_file, param_grid, artifact_path, regist
     # Set MLflow tracking URI
     mlflow.set_tracking_uri("http://mlflow:5000")  # Use the tracking server in Docker Compose
 
-    # Load, preprocess data and create pipeline
-    df_raw = load_data(data_file)
+
+
+    # Load sampled data. Comment when running in all dataset
+    df_raw = load_and_sample_data(data_file, sample_fraction=0.3)
+
+    # Uncomment when running in all dataset
+    # df_raw = load_data(data_file)
+
+    # preprocess data and create pipeline
     X_train, y_train, X_test, y_test, pipeline = process_and_pipeline(df_raw, strat=True)
 
     # Set experiment's info 

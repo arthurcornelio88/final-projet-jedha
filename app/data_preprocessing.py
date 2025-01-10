@@ -5,6 +5,20 @@ import numpy as np
 def load_data(file_path):
     return pd.read_csv(file_path, low_memory=False)
 
+def load_and_sample_data(file_path, sample_fraction=0.3, random_state=42):
+    """
+    Load and sample raw data.
+    Args:
+        file_path (str): Path to the dataset.
+        sample_fraction (float): Fraction of data to retain.
+        random_state (int): Seed for reproducibility.
+    Returns:
+        pd.DataFrame: Sampled DataFrame.
+    """
+    df_raw = load_data(file_path)  # Your load_data function
+    df_sampled = df_raw.sample(frac=sample_fraction, random_state=random_state)
+    return df_sampled
+
 # Define the cleaning function
 def clean_price(price_str):
     try:

@@ -92,7 +92,7 @@ def run_experiment(experiment_name, data_file, param_distributions, artifact_pat
     experiment = mlflow.get_experiment_by_name(experiment_name)
 
     # Call mlflow autolog
-    # mlflow.sklearn.autolog()
+    mlflow.sklearn.autolog()
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         
@@ -100,7 +100,7 @@ def run_experiment(experiment_name, data_file, param_distributions, artifact_pat
         best_model = train_model(X_train, y_train, param_distributions, n_iter=2).best_estimator_
 
         # Log metrics and model to MLflow
-        log_metrics_and_model(best_model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name)
+        # log_metrics_and_model(best_model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name)
 
     # Print timing
     print(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
@@ -113,10 +113,10 @@ if __name__ == "__main__":
 
     param_distributions = {
     "criterion": ["squared_error"],
-    "max_depth": [2, 5, 7],  # Include None for no limit
+    "max_depth": [5, 10, None],  # Include None for no limit
     "max_features": ["sqrt", "log2"],
-    "min_samples_leaf": [5, 10, 20],
-    "min_samples_split": [5, 10, 20],
+    "min_samples_leaf": [1, 4],
+    "min_samples_split": [2, 10],
     "random_state": [42],  # Keep fixed for reproducibility
     }
 

@@ -58,6 +58,9 @@ def run_experiment(experiment_name, data_file, param_grid, artifact_path, regist
     # Start timing
     start_time = time.time()
 
+    # Set MLflow tracking URI
+    mlflow.set_tracking_uri("http://mlflow:5000")  # Use the tracking server in Docker Compose
+
     # Load, preprocess data and create pipeline
     df_raw = load_data(data_file)
     X_train, X_test, y_train, y_test, pipeline = process_and_pipeline(df_raw)
@@ -84,8 +87,8 @@ def run_experiment(experiment_name, data_file, param_grid, artifact_path, regist
 if __name__ == "__main__":
 
     experiment_name = "hyperparameter_tuning"
-    data_file = 'data/total_data.csv'  # Path to your dataset
-    model_folder = 'models/' # Folder to save your trained model
+    data_file = '/home/data/total_data.csv'  # Update path to match container structure
+    model_folder = '/home/models/'  # Update path to match container structure
 
     param_grid = {
         "max_depth": [3, 5, 10, 15],  # Profondeurs d'arbre à tester

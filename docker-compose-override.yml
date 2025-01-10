@@ -14,4 +14,4 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLflow
-    command: ["python", "/app/mlflow_train.py"]
+    command: ["python", "./app/mlflow_train.py"]

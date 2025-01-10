@@ -10,7 +10,7 @@ services:
       - mlflow  # Ensure MLflow is up before running this service
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLflow
-    command: ["python", "app/mlflow_train.py"]
+    command: ["python", "/app/mlflow_train.py"]
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
@@ -24,7 +24,7 @@ services:
       --port 5000
     volumes:
       - ./models:/models
-      - ./mlflow.db:/mlflow.db
+      - ${PWD}/mlflow.db:/mlflow.db
 
   jenkins:
     image: jenkins/jenkins:lts-jdk11

@@ -7,11 +7,11 @@ services:
     ports:
       - "5000:5000"  # Expose the app on localhost:5000
     volumes:
-      - ./:/  # Mount the entire project directory to / in the container
-      - ./:/data  # Mount the data directory if needed
+    - .:/app  # Mount the project directory to /app in the container
+    - ./data:/data  # Mount the data directory if needed
     depends_on:
       - mlflow
     environment:
       - PYTHONUNBUFFERED=1
       - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLflow
-    command: ["python", "app/mlflow_train.py"]
+    command: ["python", "/app/mlflow_train.py"]

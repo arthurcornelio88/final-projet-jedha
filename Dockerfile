@@ -24,4 +24,4 @@ COPY . .
 EXPOSE 5000
 
 # Run the API (or entry point)
-CMD ["python", "app/mlflow_train.py"]
+CMD ["python", "/app/mlflow_train.py"]

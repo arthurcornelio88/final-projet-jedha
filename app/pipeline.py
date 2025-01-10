@@ -92,7 +92,7 @@ def process_and_pipeline(df_raw, mlflow=None, strat=None):
         pipeline = Pipeline([
             ('num_outlier', FunctionTransformer(num_outlier)),
             ('nominal_outlier', FunctionTransformer(nom_outlier)),
-            ('preprocessor', preprocessor)
+            ('preprocessor', preprocessor),
             ('decision_tree', DecisionTreeRegressor())
         ])
     else:

@@ -1,17 +1,35 @@
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import joblib
 import numpy as np
 
-class Model:
-    def __init__(self):
-        self.model = DecisionTreeRegressor( # with slight hyperparametrization
-            max_depth=10, 
-            min_samples_split=20,
-            random_state=42) 
+class Model(BaseEstimator, RegressorMixin):
+    def __init__(self, max_depth=10, min_samples_split=20, random_state=42, criterion="squared_error", min_samples_leaf=1, max_features=None):
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.random_state = random_state
+        self.criterion = criterion
+        self.min_samples_leaf = min_samples_leaf
+        self.max_features = max_features
+        self.model = None  # Will be initialized during fit
 
+    def fit(self, X, y):
+        self.model = DecisionTreeRegressor(
+            max_depth=self.max_depth,
+            min_samples_split=self.min_samples_split,
+            random_state=self.random_state,
+            criterion=self.criterion
+        )
+        self.model.fit(X, y)
+        return self
+    
     def train(self, X, y):
         self.model.fit(X, y)
+
+    def score(self, X, y):
+        # Implement the score method (e.g., R2 score)
+        return self.model.score(X, y)
 
     def predict(self, X):
         return self.model.predict(X)

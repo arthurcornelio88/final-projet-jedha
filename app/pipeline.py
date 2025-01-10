@@ -17,7 +17,7 @@ from app.static_values import RESPONSE_TIME_ORDER, CANCELLATION_POLICY_ORDER
 import numpy as np
 import pandas as pd
 
-def process_and_pipeline(df_raw, mlflow=None, strat=None):
+def process_and_pipeline(df_raw, mlflow=None, strat=False):
     """
     Process raw data and execute the pipeline.
 
@@ -88,19 +88,11 @@ def process_and_pipeline(df_raw, mlflow=None, strat=None):
             ]), nominal_columns)
         ])
 
-    if mlflow:
-        pipeline = Pipeline([
-            ('num_outlier', FunctionTransformer(num_outlier)),
-            ('nominal_outlier', FunctionTransformer(nom_outlier)),
-            ('preprocessor', preprocessor),
-            ('decision_tree', DecisionTreeRegressor())
-        ])
-    else:
-        pipeline = Pipeline([
-            ('num_outlier', FunctionTransformer(num_outlier)),
-            ('nominal_outlier', FunctionTransformer(nom_outlier)),
-            ('preprocessor', preprocessor)
-        ])
+    pipeline = Pipeline([
+        ('num_outlier', FunctionTransformer(num_outlier)),
+        ('nominal_outlier', FunctionTransformer(nom_outlier)),
+        ('preprocessor', preprocessor)
+    ])
 
     print(f"Pipeline created!") 
 

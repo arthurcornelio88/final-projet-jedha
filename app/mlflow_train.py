@@ -1,28 +1,41 @@
 from app.pipeline import process_and_pipeline
-from app.data_preprocessing import load_data
-from app.model import create_model
+from app.data_preprocessing import load_data, load_and_sample_data
+from app.model import Model
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
 import mlflow
 import time
+import pandas as pd
+import numpy as np
 
-
-def train_model(X_train_processed, y_train, param_grid, cv=2, n_jobs=-1, verbose=3):
+def train_model(X_train_processed, y_train, param_distributions, n_iter=10, cv=2, n_jobs=-1, verbose=3, random_state=42):
     """
-    Train the model using GridSearchCV.
+    Train the model using RandomizedSearchCV for faster hyperparameter optimization.
     Args:
-        X_train_processed (pd.DataFrame): Training processed features.
+        X_train_processed (np.ndarray): Training processed features.
         y_train (pd.Series): Training target.
-        param_grid (dict): The hyperparameter grid to search over.
+        param_distributions (dict): The hyperparameter distribution to search over.
+        n_iter (int): Number of random combinations to try.
         cv (int): Number of cross-validation folds.
         n_jobs (int): Number of jobs to run in parallel.
         verbose (int): Verbosity level.
+        random_state (int): Random seed for reproducibility.
     Returns:
-        GridSearchCV: Trained GridSearchCV object.
+        RandomizedSearchCV: Trained RandomizedSearchCV object.
     """
-    tree_model = create_model()
-    gs_cv_model = GridSearchCV(tree_model, param_grid, n_jobs=n_jobs, verbose=verbose, cv=cv, scoring="r2")
-    gs_cv_model.fit(X_train_processed, y_train)
-    return gs_cv_model
+    tree_model = Model()
+    rs_cv_model = RandomizedSearchCV(
+        estimator=tree_model,
+        param_distributions=param_distributions,
+        n_iter=n_iter,
+        cv=cv,
+        n_jobs=n_jobs,
+        verbose=verbose,
+        scoring="r2",
+        random_state=random_state
+    )
+    rs_cv_model_fitted = rs_cv_model.fit(X_train_processed, pd.DataFrame(y_train))  # Convert y_train to numpy
+    return rs_cv_model_fitted
 
 # Log metrics and model to MLflow
 def log_metrics_and_model(model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name):
@@ -37,6 +50,9 @@ def log_metrics_and_model(model, X_train, y_train, X_test, y_test, artifact_path
         artifact_path (str): Path to store the model artifact.
         registered_model_name (str): Name to register the model under in MLflow.
     """
+
+    y_train = pd.DataFrame(y_train)
+
     mlflow.log_metric("Train Score", model.score(X_train, y_train))
     mlflow.log_metric("Test Score", model.score(X_test, y_test))
     mlflow.sklearn.log_model(
@@ -61,9 +77,14 @@ def run_experiment(experiment_name, data_file, param_grid, artifact_path, regist
     # Set MLflow tracking URI
     mlflow.set_tracking_uri("http://mlflow:5000")  # Use the tracking server in Docker Compose
 
-    # Load, preprocess data and create pipeline
-    df_raw = load_data(data_file)
-    X_train, X_test, y_train, y_test, pipeline = process_and_pipeline(df_raw)
+    # Load sampled data. Comment when running in all dataset
+    df_raw = load_and_sample_data(data_file, sample_fraction=0.3)
+
+    # Uncomment when running in all dataset
+    # df_raw = load_data(data_file)
+
+    # preprocess data and create pipeline
+    X_train, y_train, X_test, y_test, pipeline = process_and_pipeline(df_raw, strat=True)
 
     # Set experiment's info 
     mlflow.set_experiment(experiment_name)
@@ -76,10 +97,13 @@ def run_experiment(experiment_name, data_file, param_grid, artifact_path, regist
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):
         # Train model
-        model = train_model(X_train, y_train, param_grid)
+        #best_model = train_model(X_train, y_train, param_grid).best_estimator_
+
+        # Train model with RandomizedSearch
+        best_model = train_model(X_train, y_train, param_distributions, n_iter=5).best_estimator_
 
         # Log metrics and model to MLflow
-        log_metrics_and_model(model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name)
+        log_metrics_and_model(best_model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name)
 
     # Print timing
     print(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
@@ -90,16 +114,17 @@ if __name__ == "__main__":
     data_file = '/home/data/total_data.csv'  # Update path to match container structure
     model_folder = '/home/models/'  # Update path to match container structure
 
-    param_grid = {
-        "max_depth": [3, 5, 10, 15],  # Profondeurs d'arbre à tester
-        "min_samples_split": [2, 5, 10, 20],  # Minimum pour diviser un nœud
-        "min_samples_leaf": [1, 2, 4, 8],  # Minimum d'échantillons dans une feuille
-        "criterion": ["squared_error", "absolute_error"],  # Fonction de perte
-        "max_features": [None, "sqrt", "log2"]  # Options de sélection des caractéristiques
+    param_distributions = {
+    "criterion": ["squared_error", "absolute_error"],
+    "max_depth": [None] + list(np.arange(3, 16)),  # Include None for no limit
+    "max_features": [None, "sqrt", "log2"],
+    "min_samples_leaf": [1, 2, 4, 8, 16],
+    "min_samples_split": [2, 5, 10, 20, 50],
+    "random_state": [42],  # Keep fixed for reproducibility
     }
 
     artifact_path = "modeling_airbnb_pricing"
     registered_model_name = "decision_tree"
 
     # Run the experiment
-    run_experiment(experiment_name, data_file, param_grid, artifact_path, registered_model_name)
+    run_experiment(experiment_name, data_file, param_distributions, artifact_path, registered_model_name)

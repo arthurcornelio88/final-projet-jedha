@@ -13,3 +13,5 @@ dependencies:
   - mlflow
   - uvicorn
   - fastapi
+  - jq
+  - pydantic

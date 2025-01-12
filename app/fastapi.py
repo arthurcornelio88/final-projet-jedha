@@ -1,58 +1,63 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 from app.model import load_model
 from app.pipeline import process_and_pipeline
 from app.static_values import TEST_INPUT
+from app.data_validation import PredictionInput
 import pandas as pd
+import json
+import joblib
 
-# Initialiser l'application FastAPI
+# Initialize FastAPI application
 app = FastAPI()
 
-# Charger le modèle depuis un chemin local ou un URI MLflow
-MODEL_PATH = "models/20250109_18-29-55 - trained_model.pkl"  # Ajustez le chemin
-MODEL_PLACEMENT = "local"  # "mlflow" ou "local"
+# Define paths to model and pipeline
+MODEL_PATH = "models/20250113_00-36-27 - trained_model.pkl"  # Adjust the path
+PIPELINE_PATH = "models/20250113_00-36-27 - preprocessing_pipeline.pkl"  # Adjust the path for the saved pipeline
+MODEL_PLACEMENT = "local"  # "mlflow" or "local"
+
+# Load the model
 model = load_model(model_placement=MODEL_PLACEMENT, model_path=MODEL_PATH)
 
-# Classe de validation des données d'entrée
-class PredictionInput(BaseModel):
-    feature1: float
-    feature2: float
-    feature3: float
+# Load the pipeline
+pipeline = joblib.load(PIPELINE_PATH)
 
-# Endpoint pour obtenir des prédictions
+# Endpoint to get predictions
 @app.post("/predictions")
 def get_predictions(input: PredictionInput):
     """
-    Endpoint pour obtenir des prédictions en fonction des données d'entrée.
+    Endpoint to get predictions based on input data.
     """
-    # Convertir les données d'entrée au format DataFrame pour la compatibilité
-    input_data = pd.DataFrame([{
-        "feature1": input.feature1,
-        "feature2": input.feature2,
-        "feature3": input.feature3
-    }])
+    # Convert input data to a DataFrame
+    input_data = pd.DataFrame([input.model_dump()])  # Wrap in a list to create a DataFrame
 
-    # Appliquer le pipeline pour prétraiter les données
-    _, _, _, _, pipeline = process_and_pipeline(input_data, mlflow=None, strat=False)
+    # Apply the pipeline to preprocess the data
     prepared_data = pipeline.transform(input_data)
 
-    # Effectuer les prédictions
+    # Perform predictions
     prediction = model.predict(prepared_data)
+
     return {"prediction": prediction.tolist()}
 
-# Endpoint pour tester avec des valeurs statiques
+
+# Endpoint to test with static values
 @app.get("/test-prediction")
 def test_prediction():
     """
-    Endpoint pour tester le modèle avec des valeurs statiques.
+    Endpoint to test the model with static values.
     """
-    # Convertir les valeurs TEST_INPUT en DataFrame
-    test_data = pd.DataFrame([TEST_INPUT])
+    json_filepath = "data/json/10-20_rows.json"
 
-    # Appliquer le pipeline pour prétraiter les données
-    _, _, _, _, pipeline = process_and_pipeline(test_data, mlflow=None, strat=False)
-    prepared_data = pipeline.transform(test_data)
+    # Open the file and load the JSON content
+    with open(json_filepath, "r") as f:
+        test_data = json.load(f)  # Load the content as a list of dictionaries
 
-    # Effectuer les prédictions
+    # Convert the test data to a DataFrame
+    test_df = pd.DataFrame(test_data)
+
+    # Apply the pipeline to preprocess the data
+    prepared_data = pipeline.transform(test_df[0:2])
+
+    # Perform predictions
     prediction = model.predict(prepared_data)
-    return {"test_input": TEST_INPUT, "prediction": prediction.tolist()}
+
+    return {"test_input": test_data, "prediction": prediction.tolist()}

@@ -2,6 +2,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import joblib
+import mlflow.sklearn
 import numpy as np
 
 class Model(BaseEstimator, RegressorMixin):
@@ -23,7 +24,7 @@ class Model(BaseEstimator, RegressorMixin):
         )
         self.model.fit(X, y)
         return self
-    
+
     def train(self, X, y):
         self.model.fit(X, y)
 
@@ -33,10 +34,10 @@ class Model(BaseEstimator, RegressorMixin):
 
     def predict(self, X):
         return self.model.predict(X)
-    
+
     def evaluate(self, X_test, y_test):
         predictions = self.predict(X_test)
-        
+
         # Compute loss
         loss = custom_loss_function(y_test, predictions)
         # Compute MAE
@@ -77,3 +78,47 @@ def mae_function(y_true, y_pred):
 def weighted_mse(y_true, y_pred):
     weights = 1 / (1 + y_true)  # Inverse of price, adjust as needed
     return np.mean(weights * (y_true - y_pred)**2)
+
+def load_model(model_placement, model_uri=None, model_path=None):
+    """
+    Load a machine learning model from either MLflow or a local file.
+
+    Args:
+        model_placement (str): The source of the model. Options are "mlflow" or "local".
+        model_uri (str, optional): The URI of the model in MLflow. Required if `model_placement` is "mlflow".
+        model_path (str, optional): The local path to the model file. Required if `model_placement` is "local".
+
+    Returns:
+        model: The loaded model instance.
+
+    Raises:
+        ValueError: If the arguments are missing or incorrectly specified.
+    """
+
+    # Check for MLflow model loading
+    if model_placement == "mlflow":
+        if model_uri is not None:
+            try:
+                model = mlflow.sklearn.load_model(model_uri)
+                print(f"Model successfully loaded from MLflow: {model_uri}")
+                return model
+            except Exception as e:
+                raise ValueError(f"Failed to load the model from MLflow at {model_uri}. Error: {e}")
+        else:
+            raise ValueError("Missing `model_uri`. You must specify the MLflow model URI when using 'mlflow' as the placement.")
+
+    # Check for local model loading
+    elif model_placement == "local":
+        if model_path is not None:
+            try:
+                model = joblib.load(model_path)
+                print(f"Model successfully loaded from local path: {model_path}")
+                return model
+            except Exception as e:
+                raise ValueError(f"Failed to load the model from local path {model_path}. Error: {e}")
+        else:
+            raise ValueError("Missing `model_path`. You must specify the local model file path when using 'local' as the placement.")
+
+    # Handle invalid `model_placement` values
+    else:
+        raise ValueError("Invalid `model_placement`. Use 'mlflow' for MLflow models or 'local' for locally saved models.")

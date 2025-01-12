@@ -99,6 +99,9 @@ def process_and_pipeline(df_raw, mlflow=None, strat=False):
     # Fit and transform the pipeline on the training set
     X_train_prepared = pipeline.fit_transform(X_train)
 
+    # Transform the test set with parameters learnt during training phase
+    X_test_transformed = pipeline.transform(X_test)
+
     print(f"Training set fitted and transformed!")
 
-    return X_train_prepared, y_train, X_test, y_test, pipeline
+    return X_train_prepared, y_train, X_test_transformed, y_test, pipeline

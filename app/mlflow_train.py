@@ -8,7 +8,7 @@ import time
 import pandas as pd
 import numpy as np
 
-def train_model(X_train_processed, y_train, param_distributions, n_iter=10, cv=2, n_jobs=-1, verbose=3, random_state=42):
+def train_model(X_train_processed, y_train, param_distributions, n_iter=10, cv=2, n_jobs=-1, verbose=1, random_state=42):
     """
     Train the model using RandomizedSearchCV for faster hyperparameter optimization.
     Args:
@@ -24,6 +24,7 @@ def train_model(X_train_processed, y_train, param_distributions, n_iter=10, cv=2
         RandomizedSearchCV: Trained RandomizedSearchCV object.
     """
     tree_model = Model()
+    n_jobs=1
     rs_cv_model = RandomizedSearchCV(
         estimator=tree_model,
         param_distributions=param_distributions,
@@ -34,7 +35,7 @@ def train_model(X_train_processed, y_train, param_distributions, n_iter=10, cv=2
         scoring="r2",
         random_state=random_state
     )
-    rs_cv_model_fitted = rs_cv_model.fit(X_train_processed, pd.DataFrame(y_train))  # Convert y_train to numpy
+    rs_cv_model_fitted = rs_cv_model.fit(X_train_processed, y_train.to_numpy())  # Convert y_train to numpy
     return rs_cv_model_fitted
 
 # Log metrics and model to MLflow
@@ -51,8 +52,6 @@ def log_metrics_and_model(model, X_train, y_train, X_test, y_test, artifact_path
         registered_model_name (str): Name to register the model under in MLflow.
     """
 
-    y_train = pd.DataFrame(y_train)
-
     mlflow.log_metric("Train Score", model.score(X_train, y_train))
     mlflow.log_metric("Test Score", model.score(X_test, y_test))
     mlflow.sklearn.log_model(
@@ -61,7 +60,7 @@ def log_metrics_and_model(model, X_train, y_train, X_test, y_test, artifact_path
         registered_model_name=registered_model_name
     )
 
-def run_experiment(experiment_name, data_file, param_grid, artifact_path, registered_model_name):
+def run_experiment(experiment_name, data_file, param_distributions, artifact_path, registered_model_name):
     """
     Run the entire ML experiment pipeline.
     Args:
@@ -78,10 +77,10 @@ def run_experiment(experiment_name, data_file, param_grid, artifact_path, regist
     mlflow.set_tracking_uri("http://mlflow:5000")  # Use the tracking server in Docker Compose
 
     # Load sampled data. Comment when running in all dataset
-    df_raw = load_and_sample_data(data_file, sample_fraction=0.3)
+    #df_raw = load_and_sample_data(data_file, sample_fraction=0.3)
 
     # Uncomment when running in all dataset
-    # df_raw = load_data(data_file)
+    df_raw = load_data(data_file)
 
     # preprocess data and create pipeline
     X_train, y_train, X_test, y_test, pipeline = process_and_pipeline(df_raw, strat=True)
@@ -96,14 +95,12 @@ def run_experiment(experiment_name, data_file, param_grid, artifact_path, regist
     mlflow.sklearn.autolog()
 
     with mlflow.start_run(experiment_id=experiment.experiment_id):
-        # Train model
-        #best_model = train_model(X_train, y_train, param_grid).best_estimator_
-
+        
         # Train model with RandomizedSearch
-        best_model = train_model(X_train, y_train, param_distributions, n_iter=5).best_estimator_
+        best_model = train_model(X_train, y_train, param_distributions, n_iter=2).best_estimator_
 
         # Log metrics and model to MLflow
-        log_metrics_and_model(best_model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name)
+        # log_metrics_and_model(best_model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name)
 
     # Print timing
     print(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
@@ -115,11 +112,11 @@ if __name__ == "__main__":
     model_folder = '/home/models/'  # Update path to match container structure
 
     param_distributions = {
-    "criterion": ["squared_error", "absolute_error"],
-    "max_depth": [None] + list(np.arange(3, 16)),  # Include None for no limit
-    "max_features": [None, "sqrt", "log2"],
-    "min_samples_leaf": [1, 2, 4, 8, 16],
-    "min_samples_split": [2, 5, 10, 20, 50],
+    "criterion": ["squared_error"],
+    "max_depth": [5, 10, None],  # Include None for no limit
+    "max_features": ["sqrt", "log2"],
+    "min_samples_leaf": [1, 4],
+    "min_samples_split": [2, 10],
     "random_state": [42],  # Keep fixed for reproducibility
     }
 

@@ -20,9 +20,6 @@ def train_model(data_file, model_folder):
     model.train(X_train, y_train)
     print("Model trained!")
 
-    # Preprocess test set
-    X_test = pipeline.transform(X_test)
-
     # Evaluate the model using the custom loss function and RSME
     loss, mae, rmse, w_mse, = model.evaluate(X_test, y_test)
 

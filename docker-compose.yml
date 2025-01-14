@@ -37,6 +37,19 @@ services:
     environment:
       - JENKINS_OPTS=--prefix=/jenkins
 
+  fastapi-app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"  # Expose FastAPI on localhost:8000
+    depends_on:
+      - mlflow  # Depend on MLflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLFlow
+    volumes:
+      - ./models:/mlflow/artifacts  # Access pipeline artifacts from MLFlow
+    command: ["uvicorn", "app.fastapi:app", "--host", "0.0.0.0", "--port", "8000"]
+
 volumes:
   mlflow-data:
   jenkins-data:

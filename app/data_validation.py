@@ -2,6 +2,9 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+from pydantic import BaseModel
+from typing import Optional
+
 class PredictionInput(BaseModel):
     Unnamed_0: Optional[int] = None
     id: Optional[int] = None
@@ -9,17 +12,6 @@ class PredictionInput(BaseModel):
     scrape_id: Optional[int] = None
     last_scraped: Optional[str] = None
     name: Optional[str] = None
-    country_code: Optional[str] = None
-    country: Optional[str] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    accommodates: Optional[int] = None
-    bathrooms: Optional[float] = None
-    bedrooms: Optional[float] = None
-    beds: Optional[float] = None
-    price: Optional[str] = None
-    room_type: Optional[str] = None
-    property_type: Optional[str] = None
     summary: Optional[str] = None
     space: Optional[str] = None
     description: Optional[str] = None
@@ -61,9 +53,21 @@ class PredictionInput(BaseModel):
     zipcode: Optional[str] = None
     market: Optional[str] = None
     smart_location: Optional[str] = None
+    country_code: Optional[str] = None
+    country: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     is_location_exact: Optional[str] = None
+    property_type: Optional[str] = None
+    room_type: Optional[str] = None
+    accommodates: Optional[int] = None
+    bathrooms: Optional[float] = None
+    bedrooms: Optional[float] = None
+    beds: Optional[float] = None
+    bed_type: Optional[str] = None
     amenities: Optional[str] = None
     square_feet: Optional[float] = None
+    price: Optional[str] = None
     weekly_price: Optional[str] = None
     monthly_price: Optional[str] = None
     security_deposit: Optional[str] = None

@@ -1,27 +1,26 @@
 from fastapi import FastAPI
-from app.model import load_model
-from app.pipeline import process_and_pipeline
-from app.static_values import TEST_INPUT
 from app.data_validation import PredictionInput
+from app.utils import (
+    load_pipeline_from_mlflow,
+    get_latest_run_id
+)
 import pandas as pd
-import json
-import joblib
+import mlflow.pyfunc
 
 # Initialize FastAPI application
 app = FastAPI()
 
-# Define paths to model and pipeline
-MODEL_PATH = "models/20250113_00-36-27 - trained_model.pkl"  # Adjust the path
-PIPELINE_PATH = "models/20250113_00-36-27 - preprocessing_pipeline.pkl"  # Adjust the path for the saved pipeline
-MODEL_PLACEMENT = "local"  # "mlflow" or "local"
+# Model and pipeline configurations
+MODEL_NAME = "decision_tree"
+MODEL_VERSION = "6"  # Use the latest version
+RUN_ID = get_latest_run_id("hyperparameter_tuning")
+PIPELINE_ARTIFACT_PATH = "pipeline/preprocessing_pipeline.pkl"  # Path inside the MLflow artifacts
 
-# Load the model
-model = load_model(model_placement=MODEL_PLACEMENT, model_path=MODEL_PATH)
+# Load model and pipeline dynamically from MLflow
+model = mlflow.pyfunc.load_model(f"models:/{MODEL_NAME}/{MODEL_VERSION}")
+pipeline = load_pipeline_from_mlflow(RUN_ID, PIPELINE_ARTIFACT_PATH)
 
-# Load the pipeline
-pipeline = joblib.load(PIPELINE_PATH)
-
-# Endpoint to get predictions
+# Endpoint for predictions
 @app.post("/predictions")
 def get_predictions(input: PredictionInput):
     """
@@ -31,33 +30,14 @@ def get_predictions(input: PredictionInput):
     input_data = pd.DataFrame([input.model_dump()])  # Wrap in a list to create a DataFrame
 
     # Apply the pipeline to preprocess the data
+
     prepared_data = pipeline.transform(input_data)
+    print("Preprocessing input done!")
 
     # Perform predictions
     prediction = model.predict(prepared_data)
 
-    return {"prediction": prediction.tolist()}
+    # Format the predictions to two decimal places
+    formatted_prediction = [round(p, 2) for p in prediction]
 
-
-# Endpoint to test with static values
-@app.get("/test-prediction")
-def test_prediction():
-    """
-    Endpoint to test the model with static values.
-    """
-    json_filepath = "data/json/10-20_rows.json"
-
-    # Open the file and load the JSON content
-    with open(json_filepath, "r") as f:
-        test_data = json.load(f)  # Load the content as a list of dictionaries
-
-    # Convert the test data to a DataFrame
-    test_df = pd.DataFrame(test_data)
-
-    # Apply the pipeline to preprocess the data
-    prepared_data = pipeline.transform(test_df[0:2])
-
-    # Perform predictions
-    prediction = model.predict(prepared_data)
-
-    return {"test_input": test_data, "prediction": prediction.tolist()}
+    return {f"real value: {input_data["price"]}, prediction: {formatted_prediction}"}

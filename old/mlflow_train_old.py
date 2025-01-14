@@ -1,11 +1,9 @@
-from sklearn.metrics import mean_absolute_error, mean_squared_error
 from app.pipeline import process_and_pipeline
 from app.data_preprocessing import load_data, load_and_sample_data
 from app.model import Model
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import RandomizedSearchCV
 import mlflow
-import joblib
 import time
 import pandas as pd
 import numpy as np
@@ -40,40 +38,27 @@ def train_model(X_train_processed, y_train, param_distributions, n_iter=10, cv=2
     rs_cv_model_fitted = rs_cv_model.fit(X_train_processed, y_train.to_numpy())  # Convert y_train to numpy
     return rs_cv_model_fitted
 
-def log_model_and_pipeline_to_mlflow(
-    model, pipeline, X_train, y_train, X_test, y_test, artifact_path, registered_model_name
-):
+# Log metrics and model to MLflow
+def log_metrics_and_model(model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name):
     """
-    Log the trained model, preprocessing pipeline, and evaluation metrics to MLflow.
+    Log training and test metrics, and the model to MLflow.
+    Args:
+        model (GridSearchCV): The trained model.
+        X_train (pd.DataFrame): Training features.
+        y_train (pd.Series): Training target.
+        X_test (pd.DataFrame): Test features.
+        y_test (pd.Series): Test target.
+        artifact_path (str): Path to store the model artifact.
+        registered_model_name (str): Name to register the model under in MLflow.
     """
-    mlflow.sklearn.autolog()  # Enable autologging for additional metrics and parameters
 
-    with mlflow.start_run() as run:
-        # Log pipeline as an artifact
-        pipeline_path = "pipelines/preprocessing_pipeline.pkl"
-        joblib.dump(pipeline, pipeline_path)
-        mlflow.log_artifact(pipeline_path, artifact_path="pipeline")
-
-        # Log the model
-        mlflow.sklearn.log_model(
-            sk_model=model.best_estimator_,
-            artifact_path=artifact_path,
-            registered_model_name=registered_model_name,
-        )
-
-        # Log evaluation metrics
-        y_pred_train = model.best_estimator_.predict(X_train)
-        y_pred_test = model.best_estimator_.predict(X_test)
-
-        mlflow.log_metric("Train R2", model.best_estimator_.score(X_train, y_train))
-        mlflow.log_metric("Test R2", model.best_estimator_.score(X_test, y_test))
-        mlflow.log_metric("Train MAE", mean_absolute_error(y_train, y_pred_train))
-        mlflow.log_metric("Test MAE", mean_absolute_error(y_test, y_pred_test))
-        mlflow.log_metric("Train RMSE", np.sqrt(mean_squared_error(y_train, y_pred_train)))
-        mlflow.log_metric("Test RMSE", np.sqrt(mean_squared_error(y_test, y_pred_test)))
-
-        print(f"Model and pipeline logged to MLflow. Run ID: {run.info.run_id}")
-        print(f"Registered Model URI: models:/{registered_model_name}")
+    mlflow.log_metric("Train Score", model.score(X_train, y_train))
+    mlflow.log_metric("Test Score", model.score(X_test, y_test))
+    mlflow.sklearn.log_model(
+        sk_model=model,
+        artifact_path=artifact_path,
+        registered_model_name=registered_model_name
+    )
 
 def run_experiment(experiment_name, data_file, param_distributions, artifact_path, registered_model_name):
     """
@@ -91,17 +76,13 @@ def run_experiment(experiment_name, data_file, param_distributions, artifact_pat
     # Set MLflow tracking URI
     mlflow.set_tracking_uri("http://mlflow:5000")  # Use the MLflow server in Docker Compose
 
-    # Set MLflow experiment
-    mlflow.set_experiment(experiment_name)
-    experiment = mlflow.get_experiment_by_name(experiment_name)
-
-    # Verify the experiment was retrieved successfully
-    if experiment is None:
-        raise ValueError(f"Experiment '{experiment_name}' not found. Please create it in MLflow.")
-
     # Load sampled data. Comment when loading all dataset
     # print("Loading sample data...")
     # df_raw = load_and_sample_data(data_file, sample_fraction=0.3)
+    # Verify the experiment was retrieved successfully
+
+    if experiment is None:
+        raise ValueError(f"Experiment '{experiment_name}' not found. Please create it in MLflow.")
 
     # Uncomment when loading all dataset
     print("Loading data...")
@@ -111,28 +92,27 @@ def run_experiment(experiment_name, data_file, param_distributions, artifact_pat
     print("Preprocessing data...")
     X_train, y_train, X_test, y_test, pipeline = process_and_pipeline(df_raw, strat=True)
 
-    # Enable MLflow autologging
-    mlflow.sklearn.autolog()
+    # Set MLflow experiment
+    mlflow.set_experiment(experiment_name)
+    experiment = mlflow.get_experiment_by_name(experiment_name)
 
     # Train model with RandomizedSearchCV
     print("Training model...")
-    best_model = train_model(X_train, y_train, param_distributions, n_iter=5)
+    best_model = train_model(X_train, y_train, param_distributions, n_iter=2)
 
-    # Log model, pipeline, and metrics to MLflow
-    print("Logging to MLflow...")
-    log_model_and_pipeline_to_mlflow(
-        model=best_model,
-        pipeline=pipeline,
-        X_train=X_train,
-        y_train=y_train,
-        X_test=X_test,
-        y_test=y_test,
-        artifact_path=artifact_path,
-        registered_model_name=registered_model_name,
-    )
+    # Call mlflow autolog
+    mlflow.sklearn.autolog()
+
+    with mlflow.start_run(experiment_id=experiment.experiment_id):
+
+        # Train model with RandomizedSearch
+        best_model = train_model(X_train, y_train, param_distributions, n_iter=2).best_estimator_
+
+        # Log metrics and model to MLflow
+        # log_metrics_and_model(best_model, X_train, y_train, X_test, y_test, artifact_path, registered_model_name)
 
     # Print timing
-    print(f"Training and logging completed! Total time: {time.time() - start_time:.2f} seconds")
+    print(f"...Training Done! --- Total training time: {time.time() - start_time} seconds")
 
 if __name__ == "__main__":
     # Define experiment and data details

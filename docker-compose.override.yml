@@ -7,10 +7,25 @@ services:
     ports:
       - "5000:5000"  # Expose the app on localhost:5000
     volumes:
-    - .:/home  # Mount the project directory to /app in the container
+      - .:/home  # Mount the project directory to /app in the container
     depends_on:
       - mlflow
     environment:
       - PYTHONUNBUFFERED=1
       - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLflow
     command: ["python", "./app/mlflow_train.py"]
+
+  fastapi-app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"  # Expose FastAPI on localhost:8000
+    volumes:
+      - .:/home  # Mount the project directory into the container
+      - ./app:/app  # Bind the FastAPI app code
+      - ./models:/mlflow/artifacts  # Access pipeline artifacts from MLFlow
+    depends_on:
+      - mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLflow
+    command: ["uvicorn", "app.fastapi:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

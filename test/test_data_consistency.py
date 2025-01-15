@@ -2,10 +2,10 @@ from app.pipeline import process_and_pipeline
 from app.data_preprocessing import load_data
 import numpy as np
 
-def test_data_consistency():
-    data_file = 'data/total_data.csv'
-    df_raw_1 = load_data(data_file)
-    df_raw_2 = load_data(data_file)
+def test_data_consistency(csv_file):
+    #data_file = 'data/total_data.csv'
+    df_raw_1 = load_data(csv_file)
+    df_raw_2 = load_data(csv_file)
 
     # Process data
     X_train_1, y_train_1, X_test_1, y_test_1, _ = process_and_pipeline(df_raw_1)

@@ -1,5 +1,4 @@
 from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.tree import DecisionTreeRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -34,7 +33,7 @@ def process_and_pipeline(df_raw, mlflow=None, strat=False):
     """
     # Apply the function to create the new column
     df_raw['price_cleaned'] = df_raw['price'].astype(str).apply(clean_price)
-    
+
     # Preparing target (price) for stratifying dataset
     df_raw["price_cat"] = pd.cut(df_raw["price_cleaned"],
         bins=[0., 150, 300, 700, 1500, np.inf], # fine-tune bin for bell-shape like distribution
@@ -54,7 +53,7 @@ def process_and_pipeline(df_raw, mlflow=None, strat=False):
         strat_train_set, strat_test_set = train_test_split(
             df_cleaned, test_size=0.2, random_state=42
         )
-    
+
     # droping "price_cat" to make dataset returns to its original state
     for set_ in (strat_train_set, strat_test_set):
         set_.drop("price_cat", axis=1, inplace=True)
@@ -94,7 +93,7 @@ def process_and_pipeline(df_raw, mlflow=None, strat=False):
         ('preprocessor', preprocessor)
     ])
 
-    print(f"Pipeline created!") 
+    print(f"Pipeline created!")
 
     # Fit and transform the pipeline on the training set
     X_train_prepared = pipeline.fit_transform(X_train)

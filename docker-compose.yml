@@ -12,6 +12,8 @@ services:
       - PYTHONUNBUFFERED=1
       - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLflow
     command: ["python", "./app/mlflow_train.py"]
+    volumes:
+      - ./models:/mlflow/artifacts  # Share the artifact directory
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
@@ -24,8 +26,8 @@ services:
       --host 0.0.0.0
       --port 5000
     volumes:
-      - ./mlflow.db:/mlflow.db  # Map the SQLite file correctly
-      - ./models:/mlflow/artifacts  # Persist artifacts locally
+      - ./mlflow.db:/mlflow.db  # Persist MLflow backend store
+      - ./models:/mlflow/artifacts  # Persist MLflow artifacts locally
 
   jenkins:
     image: jenkins/jenkins:lts-jdk11
@@ -36,6 +38,19 @@ services:
       - jenkins-data:/var/jenkins_home  # Persist Jenkins data locally
     environment:
       - JENKINS_OPTS=--prefix=/jenkins
+
+  fastapi-app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"  # Expose FastAPI on localhost:8000
+    depends_on:
+      - mlflow  # Ensure MLflow is up before starting FastAPI
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000  # Connect to MLFlow
+    command: ["uvicorn", "app.fastapi:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - ./models:/mlflow/artifacts  # Share the artifact directory
 
 volumes:
   mlflow-data:

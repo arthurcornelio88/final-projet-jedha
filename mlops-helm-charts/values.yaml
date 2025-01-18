@@ -1,0 +1,5 @@
+replicaCount: 1
+images:
+  fastapi:
+    repository: tiangolo/uvicorn-gunicorn-fastapi
+    tag: "latest"

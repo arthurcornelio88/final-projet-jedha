@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow_train
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: mlflow_train
+  template:
+    metadata:
+      labels:
+        app: mlflow_train
+    spec:
+      containers:
+      - name: mlflow_train
+        image: {{ .Values.images.mlflow_train.repository }}:{{ .Values.images.mlflow_train.tag }}
+        ports:
+          - containerPort: 5000
+        env:
+          - name: MLFLOW_TRACKING_URI
+        value: "http://mlflow:5000"
+        command: ["python", "./app/mlflow_train.py"]

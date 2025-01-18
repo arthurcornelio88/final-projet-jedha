@@ -1,0 +1,30 @@
+replicaCount: 1
+
+images:
+  mlflow:
+    repository: ghcr.io/mlflow/mlflow
+    tag: "latest"
+  fastapi:
+    repository: your-docker-repo/fastapi :TODO
+    tag: "latest"
+  script:
+    repository: your-docker-repo/script :TODO
+    tag: "latest"
+  jenkins:
+    repository: jenkins/jenkins
+    tag: "lts-jdk11"
+
+services:
+  mlflow:
+    type: ClusterIP
+    port: 5000
+  fastapi:
+    type: ClusterIP
+    port: 8000
+  script:
+    type: ClusterIP
+    port: 5000
+  jenkins:
+    type: NodePort
+    port: 8080
+    nodePort: 32000

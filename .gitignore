@@ -1,5 +1,6 @@
 data/*
 models/*
+pipelines/*
 app/__pycache__/*
 test/__pycache__/*
 __pycache__/*

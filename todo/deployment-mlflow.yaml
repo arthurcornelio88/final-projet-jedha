@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: mlflow
+  template:
+    metadata:
+      labels:
+        app: mlflow
+    spec:
+      containers:
+      - name: mlflow
+        image: {{ .Values.images.mlflow.repository }}:{{ .Values.images.mlflow.tag }}
+        ports:
+          - containerPort: 5000
+        command: ["mlflow", "server",
+                  "--backend-store-uri", "sqlite:///mlflow.db",
+                  "--default-artifact-root", "/mlflow/artifacts",
+                  "--host", "0.0.0.0"]
+        volumeMounts:
+        - name: mlflow-artifacts
+          mountPath: /mlflow/artifacts
+      volumes:
+      - name: mlflow-artifacts
+        emptyDir: {}

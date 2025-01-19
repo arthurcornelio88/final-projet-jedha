@@ -1,0 +1,9 @@
+replicaCount: 1
+images:
+  fastapi:
+    repository: fastapi-local
+    tag: latest
+services:
+  fastapi:
+    type: NodePort
+    port: 30001

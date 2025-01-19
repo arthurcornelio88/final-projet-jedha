@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-mlflow"
+  labels:
+    app: mlflow
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: mlflow
+      release: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        app: mlflow
+        release: "{{ .Release.Name }}"
+    spec:
+      containers:
+        - name: mlflow
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          ports:
+            - containerPort: {{ .Values.mlflow.port }}
+          env:
+            - name: MLFLOW_BACKEND_STORE_URI
+              value: "{{ .Values.mlflow.backendStoreUri }}"
+            - name: MLFLOW_DEFAULT_ARTIFACT_ROOT
+              value: "{{ .Values.mlflow.defaultArtifactRoot }}"
+          volumeMounts:
+            - name: mlflow-data
+              mountPath: /app
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.mlflow.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.mlflow.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: mlflow-data
+          persistentVolumeClaim:
+            claimName: "{{ .Release.Name }}-mlflow-pvc"

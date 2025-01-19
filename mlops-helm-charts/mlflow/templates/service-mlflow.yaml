@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-mlflow"
+  labels:
+    app: mlflow
+    release: "{{ .Release.Name }}"
+spec:
+  type: "{{ .Values.service.type }}"
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.mlflow.port }}
+      protocol: TCP
+  selector:
+    app: mlflow
+    release: "{{ .Release.Name }}"

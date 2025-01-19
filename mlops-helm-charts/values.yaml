@@ -1,5 +1,48 @@
-replicaCount: 1
-images:
-  fastapi:
-    repository: tiangolo/uvicorn-gunicorn-fastapi
-    tag: "latest"
+# Root chart values.yaml for mlops-helm-charts
+
+airflow:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: apache/airflow
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+
+jenkins:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: jenkins/jenkins
+    tag: lts
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+
+fastapi:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: fastapi-example
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+
+mlflow:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: mlflow
+    tag: latest
+    pullPolicy: Never  # Using locally built image
+  service:
+    type: ClusterIP
+    port: 5000
+  # Additional MLflow-specific values can be added below
+  backendStoreUri: sqlite:///mlflow.db
+  defaultArtifactRoot: /mlruns

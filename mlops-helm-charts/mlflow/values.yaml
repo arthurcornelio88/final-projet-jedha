@@ -1,0 +1,26 @@
+# Number of MLflow replicas
+replicaCount: 1
+
+# MLflow server configurations
+mlflow:
+  backendStoreUri: sqlite:///mlflow.db  # Path for backend storage
+  defaultArtifactRoot: /mlruns          # Path for artifact storage
+  port: 5000                            # Port MLflow server listens on
+
+# Kubernetes service settings
+service:
+  type: NodePort                        # Expose service as NodePort for Minikube
+  port: 5000                            # Service port mapping to container port
+
+# Docker image details
+image:
+  repository: mlflow                    # Docker image repository for MLflow
+  tag: latest                           # Docker image tag
+  pullPolicy: Never                     # Image pull policy
+
+# Persistent volume claim configuration
+persistence:
+  enabled: true                         # Enable persistence for backend and artifacts
+  accessMode: ReadWriteOnce             # Access mode for the PVC
+  size: 1Gi                             # Storage size for the PVC
+  storageClass: standard                # (Optional) Specify storage class for PVC

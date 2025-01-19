@@ -1,0 +1,11 @@
+apiVersion: v2
+name: mlops
+description: Helm chart for MLOps stack
+version: 0.1.0
+dependencies:
+  - name: fastapi
+    version: 0.1.0
+    repository: file://./fastapi
+  - name: mlflow
+    version: 0.1.0
+    repository: file://./mlflow

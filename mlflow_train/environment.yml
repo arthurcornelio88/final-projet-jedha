@@ -1,0 +1,15 @@
+name: mlops
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.8
+  - numpy
+  - pandas
+  - scikit-learn
+  - protobuf<=3.20.3
+  - mlflow
+  - pip
+  - pip:
+      - uvicorn
+      - fastapi
+      - pydantic

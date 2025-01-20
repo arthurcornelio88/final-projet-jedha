@@ -1,4 +1,4 @@
-name: mlops
+name: mlflow-node
 channels:
   - conda-forge
 dependencies:

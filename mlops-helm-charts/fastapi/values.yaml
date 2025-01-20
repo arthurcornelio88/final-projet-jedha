@@ -1,15 +1,20 @@
-# Number of replicas for FastAPI
-replicaCount: 1
+# FastAPI configurations
+fastapi:
+  replicaCount: 1                     # Number of FastAPI replicas
+  port: 8000                          # Port FastAPI listens on
+  pipelineArtifactPath: pipeline/preprocessing_pipeline.pkl  # Path to pipeline artifact
+  experimentName: hyperparameter_tuning  # MLflow experiment name
+  modelName: decision_tree            # Model name
+  modelVersion: latest                # Model version
 
-# Docker image configurations for FastAPI
-images:
-  fastapi:
-    repository: fastapi-local            # Docker repository for FastAPI image
-    tag: latest                          # Docker image tag
-    pullPolicy: IfNotPresent             # Default pull policy
+# MLflow configurations (reuse existing)
+mlflow:
+  backendStoreUri: sqlite:///mlflow.db  # Path for backend storage
+  defaultArtifactRoot: /mlruns          # Path for artifact storage
+  port: 5000                            # Port MLflow server listens on
 
-# Service configurations for FastAPI
-services:
-  fastapi:
-    type: NodePort                       # Service type
-    port: 30001                          # Port for FastAPI service
+# Docker image details for FastAPI
+image:
+  repository: fastapi                  # Docker image repository for FastAPI
+  tag: latest                          # Docker image tag
+  pullPolicy: Never                    # Image pull policy

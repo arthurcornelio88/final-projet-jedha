@@ -21,19 +21,22 @@ spec:
     spec:
       containers:
         - name: fastapi
-          image: "{{ .Values.images.fastapi.repository }}:{{ .Values.images.fastapi.tag }}"
-          imagePullPolicy: "{{ .Values.image.pullPolicy | default 'IfNotPresent' }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           ports:
-            - containerPort: {{ .Values.services.fastapi.port }}
+            - containerPort: {{ .Values.fastapi.port }}
+          envFrom:
+            - configMapRef:
+                name: "{{ .Release.Name }}-fastapi-configmap"
           readinessProbe:
             httpGet:
-              path: "/health"
-              port: {{ .Values.services.fastapi.port }}
+              path: /
+              port: {{ .Values.fastapi.port }}
             initialDelaySeconds: 10
             periodSeconds: 5
           livenessProbe:
             httpGet:
-              path: "/health"
-              port: {{ .Values.services.fastapi.port }}
+              path: /
+              port: {{ .Values.fastapi.port }}
             initialDelaySeconds: 15
             periodSeconds: 10

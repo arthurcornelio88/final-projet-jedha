@@ -4,11 +4,11 @@ FROM condaforge/miniforge3:latest
 # Set the working directory
 WORKDIR /app
 
-# Copy the environment file and install dependencies
-COPY environment.yml /app/environment.yml
+# Copy the environment file
+COPY environment.yml .
 
 # Install dependencies using Mamba for faster resolution and cleanup unnecessary files
-RUN mamba env create -f /app/environment.yml && conda clean -afy
+RUN mamba env create -f environment.yml && conda clean -afy && rm -f environment.yml
 
 # Activate the environment in the container
 ENV PATH="/opt/conda/envs/mlops/bin:$PATH"

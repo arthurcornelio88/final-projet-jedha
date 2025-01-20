@@ -6,10 +6,10 @@ metadata:
     app: fastapi
     release: "{{ .Release.Name }}"
 spec:
-  type: "{{ .Values.services.fastapi.type }}"
+  type: "{{ .Values.service.type | quote }}"  # NodePort for Minikube or ClusterIP for internal access
   ports:
-    - port: {{ .Values.services.fastapi.port }}
-      targetPort: {{ .Values.services.fastapi.port }}
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.fastapi.port }}
       protocol: TCP
   selector:
     app: fastapi

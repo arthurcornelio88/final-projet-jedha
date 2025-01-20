@@ -1,0 +1,19 @@
+# Number of replicas for Airflow
+replicaCount: 1
+
+# Docker image configurations for Airflow
+image:
+  repository: airflow-local              # Docker repository for Airflow image
+  tag: latest                            # Docker image tag
+  pullPolicy: IfNotPresent               # Default pull policy
+
+# Airflow-specific configurations
+airflow:
+  executor: LocalExecutor                # Type of executor (e.g., LocalExecutor, CeleryExecutor)
+  sqlAlchemyConn: sqlite:////airflow.db  # SQLAlchemy connection string for metadata database
+  fernetKey: your_fernet_key_here        # Fernet key for encrypting variables/passwords
+
+# Service configurations for Airflow
+service:
+  type: NodePort                         # Service type (NodePort for local testing)
+  port: 8080                             # Port for Airflow webserver

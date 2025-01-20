@@ -2,5 +2,5 @@ apiVersion: v2
 name: mlflow
 description: Helm chart for deploying the MLflow tracking server
 type: application
-version: 1.0.0
+version: 0.1.0
 appVersion: latest

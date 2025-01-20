@@ -1,13 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mlflow
+  name: "{{ .Release.Name }}-fastapi"
   labels:
-    app: mlflow
+    app: fastapi
+    release: "{{ .Release.Name }}"
 spec:
-  type: {{ .Values.service.type }}
+  type: "{{ .Values.services.fastapi.type }}"
   ports:
-  - port: {{ .Values.service.port }}
-    targetPort: {{ .Values.mlflow.port }}
+    - port: {{ .Values.services.fastapi.port }}
+      targetPort: {{ .Values.services.fastapi.port }}
+      protocol: TCP
   selector:
-    app: mlflow
+    app: fastapi
+    release: "{{ .Release.Name }}"

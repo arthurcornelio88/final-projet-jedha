@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-jenkins"
+  labels:
+    app: jenkins
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: jenkins
+      release: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        app: jenkins
+        release: "{{ .Release.Name }}"
+    spec:
+      containers:
+        - name: jenkins
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          volumeMounts:
+            - name: jenkins-data
+              mountPath: "/var/jenkins_home"
+          readinessProbe:
+            httpGet:
+              path: "/login"
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: "/login"
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: jenkins-data
+          persistentVolumeClaim:
+            claimName: "{{ .Release.Name }}-jenkins-pvc"

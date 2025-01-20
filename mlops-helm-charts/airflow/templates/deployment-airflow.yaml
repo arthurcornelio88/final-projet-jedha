@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-airflow"
+  labels:
+    app: airflow
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: airflow
+      release: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        app: airflow
+        release: "{{ .Release.Name }}"
+    spec:
+      containers:
+        - name: airflow
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: AIRFLOW__CORE__EXECUTOR
+              value: "{{ .Values.airflow.executor }}"
+            - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              value: "{{ .Values.airflow.sqlAlchemyConn }}"
+            - name: AIRFLOW__CORE__FERNET_KEY
+              value: "{{ .Values.airflow.fernetKey }}"
+          readinessProbe:
+            httpGet:
+              path: "/health"
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: "/health"
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10

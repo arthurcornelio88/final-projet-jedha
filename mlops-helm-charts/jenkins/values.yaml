@@ -1,0 +1,20 @@
+# Number of replicas for Jenkins
+replicaCount: 1
+
+# Docker image configurations for Jenkins
+image:
+  repository: jenkins/jenkins            # Docker repository for Jenkins image
+  tag: lts                               # Docker image tag
+  pullPolicy: IfNotPresent               # Default pull policy
+
+# Service configurations for Jenkins
+service:
+  type: NodePort                         # Service type (NodePort for local testing)
+  port: 8080                             # Port for Jenkins web interface
+
+# Persistent volume claim configuration
+persistence:
+  enabled: true                          # Enable persistence for Jenkins data
+  accessMode: ReadWriteOnce              # Access mode for the PVC
+  size: 10Gi                             # Storage size for the PVC
+  storageClass: standard                 # (Optional) Specify storage class for PVC

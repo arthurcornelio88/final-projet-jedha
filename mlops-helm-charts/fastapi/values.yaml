@@ -1,9 +1,15 @@
+# Number of replicas for FastAPI
 replicaCount: 1
+
+# Docker image configurations for FastAPI
 images:
   fastapi:
-    repository: fastapi-local
-    tag: latest
+    repository: fastapi-local            # Docker repository for FastAPI image
+    tag: latest                          # Docker image tag
+    pullPolicy: IfNotPresent             # Default pull policy
+
+# Service configurations for FastAPI
 services:
   fastapi:
-    type: NodePort
-    port: 30001
+    type: NodePort                       # Service type
+    port: 30001                          # Port for FastAPI service

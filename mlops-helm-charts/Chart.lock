@@ -1,0 +1,15 @@
+dependencies:
+- name: mlflow
+  repository: file://./mlflow
+  version: 0.1.0
+- name: fastapi
+  repository: file://./fastapi
+  version: 0.1.0
+- name: jenkins
+  repository: file://./jenkins
+  version: 0.1.0
+- name: airflow
+  repository: file://./airflow
+  version: 0.1.0
+digest: sha256:7788c7d34c767d32315585013d41b0c3857ebf3b4e3791139ebea82a31c6e7cf
+generated: "2025-01-20T01:13:21.666254809+01:00"

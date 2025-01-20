@@ -1,34 +1,39 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mlflow
+  name: "{{ .Release.Name }}-fastapi"
   labels:
-    app: mlflow
+    app: fastapi
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: mlflow
+      app: fastapi
+      release: "{{ .Release.Name }}"
   template:
     metadata:
       labels:
-        app: mlflow
+        app: fastapi
+        release: "{{ .Release.Name }}"
     spec:
       containers:
-      - name: mlflow
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        ports:
-        - containerPort: {{ .Values.mlflow.port }}
-        env:
-        - name: MLFLOW_BACKEND_STORE_URI
-          value: "{{ .Values.mlflow.backendStoreUri }}"
-        - name: MLFLOW_DEFAULT_ARTIFACT_ROOT
-          value: "{{ .Values.mlflow.defaultArtifactRoot }}"
-        volumeMounts:
-        - name: mlflow-data
-          mountPath: /app
-      volumes:
-      - name: mlflow-data
-        persistentVolumeClaim:
-          claimName: mlflow-pvc
+        - name: fastapi
+          image: "{{ .Values.images.fastapi.repository }}:{{ .Values.images.fastapi.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy | default 'IfNotPresent' }}"
+          ports:
+            - containerPort: {{ .Values.services.fastapi.port }}
+          readinessProbe:
+            httpGet:
+              path: "/health"
+              port: {{ .Values.services.fastapi.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: "/health"
+              port: {{ .Values.services.fastapi.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10

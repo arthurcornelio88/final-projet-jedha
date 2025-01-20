@@ -4,16 +4,28 @@ description: Umbrella Helm chart for MLOps platform
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
+
 dependencies:
-  - name: fastapi
-    version: 0.1.0
-    repository: file://./fastapi
   - name: mlflow
+    alias: mlflow
     version: 0.1.0
     repository: file://./mlflow
+    condition: mlflow.enabled # Dynamically enabled or disabled in values.yaml
+
+  - name: fastapi
+    alias: fastapi
+    version: 0.1.0
+    repository: file://./fastapi
+    condition: fastapi.enabled # Add this condition if needed, defaulted to disabled
+
   - name: jenkins
+    alias: jenkins
     version: 0.1.0
     repository: file://./jenkins
+    condition: jenkins.enabled # Add this condition if needed, defaulted to disabled
+
   - name: airflow
+    alias: airflow
     version: 0.1.0
     repository: file://./airflow
+    condition: airflow.enabled # Add this condition if needed, defaulted to disabled

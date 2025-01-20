@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-jenkins"
+  labels:
+    app: jenkins
+    release: "{{ .Release.Name }}"
+spec:
+  type: "{{ .Values.service.type }}"
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+  selector:
+    app: jenkins
+    release: "{{ .Release.Name }}"

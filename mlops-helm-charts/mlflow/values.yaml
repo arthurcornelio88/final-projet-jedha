@@ -22,5 +22,5 @@ image:
 persistence:
   enabled: true                         # Enable persistence for backend and artifacts
   accessMode: ReadWriteOnce             # Access mode for the PVC
-  size: 1Gi                             # Storage size for the PVC
-  storageClass: standard                # (Optional) Specify storage class for PVC
+  size: "1Gi"                             # Storage size for the PVC
+  storageClass: "standard"                # (Optional) Specify storage class for PVC
